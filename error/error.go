@@ -1,5 +1,7 @@
 package error
 
+// 错误处理
+
 import (
 	"fmt"
 	"log"

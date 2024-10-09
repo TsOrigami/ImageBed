@@ -69,9 +69,9 @@ func handleUploadImages(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("md5:", picMd5)
 		fmt.Printf("file %s uploaded ok\n", fileHeader.Filename)
 
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("文件上传成功"))
 	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("文件上传成功"))
 }
 
 func handlerDeleteImages(w http.ResponseWriter, r *http.Request) {
