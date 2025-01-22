@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"bufio"
@@ -12,9 +12,9 @@ import (
 type Config map[string]string
 
 func GetConfigGroupAsJSON(groupName string) ([]byte, error) {
-	file, err := os.Open("./config/config.conf")
+	file, err := os.Open("./configs/config.conf")
 	if err != nil {
-		return nil, fmt.Errorf("无法打开 ./config/config.conf 文件: %v", err)
+		return nil, fmt.Errorf("无法打开 ./configs/configs.conf 文件: %v", err)
 	}
 	defer func(file *os.File) {
 		err := file.Close()
