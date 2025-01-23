@@ -3,6 +3,7 @@ package services
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	uuid "github.com/satori/go.uuid"
 	"io"
 	"os"
 )
@@ -25,4 +26,14 @@ func GetSha256(FilePath string) (string, error) {
 	}
 	picSha256 := hex.EncodeToString(hash.Sum(nil))
 	return picSha256, nil
+}
+
+// GetUUIDv1 获取UUIDv1。v1基于时间戳和MAC地址生成
+func GetUUIDv1() string {
+	return uuid.NewV1().String()
+}
+
+// GetUUIDv4 获取UUIDv4。v4是随机生成的
+func GetUUIDv4() string {
+	return uuid.NewV4().String()
 }

@@ -98,9 +98,11 @@ func DisconnectDB(db *sql.DB) error {
 
 func createTables(db *sql.DB) error {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS image_info (
+    	uuid VARCHAR(36) PRIMARY KEY,
 		image_name VARCHAR(255),
-		sha256Hash CHAR(64) PRIMARY KEY,
-		created_at DATETIME
+		sha256Hash CHAR(64),
+		created_at DATETIME,
+    	is_deleted BOOLEAN DEFAULT FALSE
 	)`
 	_, err := db.Exec(createTableSQL)
 	if err != nil {
