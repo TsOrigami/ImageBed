@@ -4,11 +4,23 @@ import (
 	database "ImageV2/internal/db"
 	errorHandle "ImageV2/internal/error"
 	"ImageV2/internal/services"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
 func HandleUpload(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	fmt.Printf("Content-Type: %s\n", r.Header.Get("Content-Type"))
+	// 检查 Content-Type 是否以 "multipart/form-data" 开头
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		http.Error(w, "Unsupported Content-Type, must be multipart/form-data", http.StatusUnsupportedMediaType)
+		return
+	}
 	err := r.ParseMultipartForm(100 << 20)
 	if err != nil {
 		errorHandle.UploadError(w)
