@@ -26,7 +26,10 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 	uuid := r.Form.Get("uuid")
 	err = database.DeleteInfoFromSQL(uuid)
 	if err != nil {
-		http.Error(w, "删除数据失败", http.StatusInternalServerError)
+		_, err := fmt.Fprintf(w, "删除数据失败: %v", err)
+		if err != nil {
+			return
+		}
 		return
 	}
 	w.WriteHeader(http.StatusOK)

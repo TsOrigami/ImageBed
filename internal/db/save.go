@@ -14,7 +14,7 @@ func SaveInfoToSQL(imageName, sha256Hash string, createdAt time.Time) error {
 	}
 	// 插入数据
 	uuidV1 := services.GetUUIDv1()
-	insertSQL := `INSERT INTO image_info (uuid, image_name, sha256Hash, created_at, is_deleted) VALUES (?, ?, ?, ?, false)`
+	insertSQL := `INSERT INTO image_info (uuid, image_name, sha256Hash, created_at) VALUES (?, ?, ?, ?)`
 	_, err = dbInfo.Connect.Exec(insertSQL, uuidV1, imageName, sha256Hash, createdAt)
 	if err != nil {
 		fmt.Println(sha256Hash)

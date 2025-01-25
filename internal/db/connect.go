@@ -32,6 +32,10 @@ func GetDB() (*DB, error) {
 			if err != nil {
 				return nil, err
 			}
+			err = createDelTables(db)
+			if err != nil {
+				return nil, err
+			}
 			instance = &DB{
 				Dsn:     mysqlDSN,
 				Connect: db,
@@ -101,8 +105,21 @@ func createTables(db *sql.DB) error {
     	uuid VARCHAR(36) PRIMARY KEY,
 		image_name VARCHAR(255),
 		sha256Hash CHAR(64),
-		created_at DATETIME,
-    	is_deleted BOOLEAN DEFAULT FALSE
+		created_at DATETIME
+	)`
+	_, err := db.Exec(createTableSQL)
+	if err != nil {
+		return fmt.Errorf("创建表失败: %v", err)
+	}
+	return nil
+}
+
+func createDelTables(db *sql.DB) error {
+	createTableSQL := `CREATE TABLE IF NOT EXISTS image_info_del (
+    	uuid VARCHAR(36) PRIMARY KEY,
+		image_name VARCHAR(255),
+		sha256Hash CHAR(64),
+		created_at DATETIME
 	)`
 	_, err := db.Exec(createTableSQL)
 	if err != nil {
