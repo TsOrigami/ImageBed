@@ -2,8 +2,12 @@ package handlers
 
 import (
 	dbImage "ImageV2/internal/db/image"
+	dbUser "ImageV2/internal/db/user"
+	service "ImageV2/internal/services"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 func HandleQuery(w http.ResponseWriter, r *http.Request) {
@@ -16,23 +20,37 @@ func HandleQuery(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unsupported Content-Type", http.StatusUnsupportedMediaType)
 		return
 	}
+	// 检查登录状态
+	err := service.CheckLogin(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("未授权: %v", err), http.StatusUnauthorized)
+		return
+	}
 	// 解析表单数据
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("解析表单数据失败: %v", err), http.StatusBadRequest)
 		return
 	}
-	// 获取表单中的 uuid 参数
+	token := r.Header.Get("Authorization")
+	if strings.HasPrefix(token, "Bearer ") {
+		token = strings.TrimPrefix(token, "Bearer ")
+	}
+	username, err := dbUser.GetUsername(token)
 	startStr := r.Form.Get("start")
 	endStr := r.Form.Get("end")
-	uuids, err := dbImage.GetInfoQuery(startStr, endStr)
+	uuids, err := dbImage.GetInfoQuery(startStr, endStr, username)
 	if err != nil {
 		return
 	}
+	response := ImageQueryResponse{
+		Code:  200,   // 设置 code 为 200
+		UUIDs: uuids, // 赋值查询到的 uuids
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = fmt.Fprintf(w, `{"uuids": %v}`, uuids)
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		return
+		http.Error(w, "服务器错误", http.StatusInternalServerError)
 	}
 }

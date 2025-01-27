@@ -1,7 +1,7 @@
 package services
 
 import (
-	usr "ImageV2/internal/db/user"
+	"ImageV2/internal/db/user"
 	"errors"
 	"net/http"
 	"strings"
@@ -15,8 +15,9 @@ func CheckLogin(r *http.Request) error {
 	if token == "" {
 		return errors.New("unauthorized")
 	} else {
-		if !usr.CheckToken(token) {
-			return errors.New("unauthorized")
+		_, err := user.GetUsername(token)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

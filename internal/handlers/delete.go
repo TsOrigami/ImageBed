@@ -2,9 +2,12 @@ package handlers
 
 import (
 	dbImage "ImageV2/internal/db/image"
+	dbUser "ImageV2/internal/db/user"
 	service "ImageV2/internal/services"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 func HandleDelete(w http.ResponseWriter, r *http.Request) {
@@ -30,8 +33,13 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取表单中的 uuid 参数
+	token := r.Header.Get("Authorization")
+	if strings.HasPrefix(token, "Bearer ") {
+		token = strings.TrimPrefix(token, "Bearer ")
+	}
+	usernameDel, err := dbUser.GetUsername(token)
 	uuid := r.Form.Get("uuid")
-	err = dbImage.DeleteInfoFromSQL(uuid)
+	err = dbImage.DeleteInfoFromSQL(uuid, usernameDel)
 	if err != nil {
 		_, err := fmt.Fprintf(w, "删除数据失败: %v", err)
 		if err != nil {
@@ -39,9 +47,14 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	response := ImageResponse{
+		Code: 200,
+		Msg:  "删除成功:" + uuid,
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("删除成功:" + uuid))
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		return
+		http.Error(w, "服务器错误", http.StatusInternalServerError)
 	}
 }

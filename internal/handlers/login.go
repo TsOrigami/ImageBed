@@ -7,11 +7,6 @@ import (
 	"net/http"
 )
 
-type LoginResponse struct {
-	Token    string `json:"token"`
-	Username string `json:"username"`
-}
-
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -36,14 +31,12 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("登录失败: %v", err), http.StatusBadRequest)
 		return
 	}
-	response := LoginResponse{
+	response := UserResponse{
 		Token:    token,
 		Username: userName,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
-	// 将响应结构体编码为 JSON 并写入响应体
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "服务器错误", http.StatusInternalServerError)

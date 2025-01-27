@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func DeleteInfoFromSQL(uuidDel string) error {
+func DeleteInfoFromSQL(uuidDel string, usernameDel string) error {
 	// 获取数据库连接
 	dbInfo, err := sql2.GetDB()
 	if err != nil {
@@ -15,11 +15,11 @@ func DeleteInfoFromSQL(uuidDel string) error {
 	}
 
 	// 查询要删除的记录信息
-	var uuid, imageName, sha256Hash string
+	var uuid, imageName, userName, sha256Hash string
 	var createdAt []uint8
 	// 查询对应的记录 于 image_info 表
-	querySQL := `SELECT uuid, image_name, sha256Hash, created_at FROM image_info WHERE uuid = ?`
-	err = dbInfo.Connect.QueryRow(querySQL, uuidDel).Scan(&uuid, &imageName, &sha256Hash, &createdAt)
+	querySQL := `SELECT * FROM image_info WHERE uuid = ? AND user_name = ?`
+	err = dbInfo.Connect.QueryRow(querySQL, uuidDel, usernameDel).Scan(&uuid, &imageName, &userName, &sha256Hash, &createdAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("未找到对应的记录，UUID: %s", uuidDel)
@@ -28,15 +28,15 @@ func DeleteInfoFromSQL(uuidDel string) error {
 	}
 
 	// 将记录插入 到 image_info_del 表
-	insertSQL := `INSERT INTO image_info_del (uuid, image_name, sha256Hash, created_at) VALUES (?, ?, ?, ?)`
-	_, err = dbInfo.Connect.Exec(insertSQL, uuid, imageName, sha256Hash, createdAt)
+	insertSQL := `INSERT INTO image_info_del (uuid, image_name, user_name, sha256Hash, created_at) VALUES (?, ?, ?, ?, ?)`
+	_, err = dbInfo.Connect.Exec(insertSQL, uuid, imageName, userName, sha256Hash, createdAt)
 	if err != nil {
 		return fmt.Errorf("将数据插入到删除表失败: %v", err)
 	}
 
 	// 从 image_info 表中删除记录
-	deleteSQL := `DELETE FROM image_info WHERE uuid = ?`
-	_, err = dbInfo.Connect.Exec(deleteSQL, uuidDel)
+	deleteSQL := `DELETE FROM image_info WHERE uuid = ? AND user_name = ?`
+	_, err = dbInfo.Connect.Exec(deleteSQL, uuidDel, usernameDel)
 	if err != nil {
 		return fmt.Errorf("删除数据失败: %v", err)
 	}

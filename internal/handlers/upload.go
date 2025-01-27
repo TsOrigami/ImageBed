@@ -2,11 +2,15 @@ package handlers
 
 import (
 	dbImage "ImageV2/internal/db/image"
+	dbUser "ImageV2/internal/db/user"
 	errorHandle "ImageV2/internal/error"
-	"ImageV2/internal/services"
+	service "ImageV2/internal/services"
+	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -21,44 +25,88 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unsupported Content-Type, must be multipart/form-data", http.StatusUnsupportedMediaType)
 		return
 	}
-	err := r.ParseMultipartForm(100 << 20)
+	// 检查登录状态
+	err := service.CheckLogin(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("未授权: %v", err), http.StatusUnauthorized)
+		return
+	}
+	token := r.Header.Get("Authorization")
+	if strings.HasPrefix(token, "Bearer ") {
+		token = strings.TrimPrefix(token, "Bearer ")
+	}
+	username, err := dbUser.GetUsername(token)
+	if err != nil {
+		errorHandle.DatabaseError(w, err)
+		return
+	}
+	err = r.ParseMultipartForm(100 << 20)
 	if err != nil {
 		errorHandle.UploadError(w)
 		return
 	} // 限制上传文件大小为100MB
 	mForm := r.MultipartForm
+	var wg sync.WaitGroup
+
+	// 逐个文件并发处理
 	for k := range mForm.File {
-		file, fileHeader, err := r.FormFile(k)
-		if err != nil {
-			errorHandle.UploadError(w)
-			return
-		}
-		err = file.Close()
-		if err != nil {
-			return
-		}
-		fileName := fileHeader.Filename
-		imagePath, err := services.GetSavePath()
-		err = services.SaveImage(imagePath, fileName, file)
-		if err != nil {
-			return
-		}
-		localFileName := imagePath + "/" + fileName
-		picSha256, err := services.GetSha256(localFileName)
-		if err != nil {
-			errorHandle.UploadError(w)
-			return
-		}
-		uploadTime := time.Now()
-		err = dbImage.SaveInfoToSQL(fileName, picSha256, uploadTime)
-		if err != nil {
-			errorHandle.DatabaseError(w, err)
-			return
-		}
+		wg.Add(1) // 增加计数
+		go func(k string) {
+			defer wg.Done() // 完成时减少计数
+			file, fileHeader, err := r.FormFile(k)
+			if err != nil {
+				errorHandle.UploadError(w)
+				return
+			}
+			defer func(file multipart.File) {
+				err := file.Close()
+				if err != nil {
+					return
+				}
+			}(file)
+			fileName := fileHeader.Filename
+			imagePath, err := service.GetSavePath()
+			if err != nil {
+				errorHandle.UploadError(w)
+				return
+			}
+			err = service.SaveImage(imagePath, fileName, file)
+			if err != nil {
+				errorHandle.UploadError(w)
+				return
+			}
+			localFileName := imagePath + "/" + fileName
+			if err != nil {
+				errorHandle.UploadError(w)
+				return
+			}
+			channel := make(chan string, 1)
+			go func() {
+				picSha256, err := service.GetSha256(localFileName)
+				if err != nil {
+					errorHandle.UploadError(w)
+					return
+				}
+				channel <- picSha256
+			}()
+			picSha256 := <-channel
+			uploadTime := time.Now()
+			err = dbImage.SaveInfoToSQL(fileName, username, picSha256, uploadTime)
+			if err != nil {
+				errorHandle.DatabaseError(w, err)
+				return
+			}
+		}(k)
 	}
+	wg.Wait() // 等待所有文件上传任务完成
+	response := ImageResponse{
+		Code: 200,
+		Msg:  "文件上传成功",
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("文件上传成功"))
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		return
+		http.Error(w, "服务器错误", http.StatusInternalServerError)
 	}
 }

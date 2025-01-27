@@ -109,6 +109,7 @@ func createTables(db *sql.DB) error {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS image_info (
     	uuid VARCHAR(36) PRIMARY KEY,
 		image_name VARCHAR(255),
+    	user_name VARCHAR(255),
 		sha256Hash CHAR(64),
 		created_at DATETIME
 	)`
@@ -124,6 +125,7 @@ func createDelTables(db *sql.DB) error {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS image_info_del (
     	uuid VARCHAR(36) PRIMARY KEY,
 		image_name VARCHAR(255),
+    	user_name VARCHAR(255),
 		sha256Hash CHAR(64),
 		created_at DATETIME
 	)`

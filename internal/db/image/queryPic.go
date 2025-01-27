@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func GetInfoQuery(startStr string, endStr string) ([]string, error) {
+func GetInfoQuery(startStr string, endStr string, username string) ([]string, error) {
 	var err error
 	db, err := db2.GetDB()
 	if err != nil {
@@ -22,7 +22,7 @@ func GetInfoQuery(startStr string, endStr string) ([]string, error) {
 	}
 	limit := end - start + 1
 	offset := start - 1
-	rows, err := db.Connect.Query("SELECT uuid FROM image_info LIMIT ? OFFSET ?", limit, offset)
+	rows, err := db.Connect.Query("SELECT uuid FROM image_info WHERE user_name = ? LIMIT ? OFFSET ?", username, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("查询数据失败: %v", err)
 	}
