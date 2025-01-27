@@ -1,13 +1,14 @@
-package db
+package image
 
 import (
+	db2 "ImageV2/internal/db/sql"
 	"fmt"
 	"strconv"
 )
 
 func GetInfoQuery(startStr string, endStr string) ([]string, error) {
 	var err error
-	db, err := GetDB()
+	db, err := db2.GetDB()
 	if err != nil {
 		return nil, fmt.Errorf("获取数据库连接失败: %v", err)
 	}

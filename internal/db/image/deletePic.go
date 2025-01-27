@@ -1,6 +1,7 @@
-package db
+package image
 
 import (
+	sql2 "ImageV2/internal/db/sql"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 
 func DeleteInfoFromSQL(uuidDel string) error {
 	// 获取数据库连接
-	dbInfo, err := GetDB()
+	dbInfo, err := sql2.GetDB()
 	if err != nil {
 		return fmt.Errorf("获取数据库连接失败: %v", err)
 	}

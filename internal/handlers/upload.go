@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	database "ImageV2/internal/db"
+	dbImage "ImageV2/internal/db/image"
 	errorHandle "ImageV2/internal/error"
 	"ImageV2/internal/services"
 	"fmt"
@@ -50,7 +50,7 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		uploadTime := time.Now()
-		err = database.SaveInfoToSQL(fileName, picSha256, uploadTime)
+		err = dbImage.SaveInfoToSQL(fileName, picSha256, uploadTime)
 		if err != nil {
 			errorHandle.DatabaseError(w, err)
 			return

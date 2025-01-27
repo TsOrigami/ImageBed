@@ -1,12 +1,18 @@
 package handlers
 
 import (
-	dbImage "ImageV2/internal/db/image"
+	service "ImageV2/internal/services"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-func HandleQuery(w http.ResponseWriter, r *http.Request) {
+type LoginResponse struct {
+	Token    string `json:"token"`
+	Username string `json:"username"`
+}
+
+func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -16,23 +22,30 @@ func HandleQuery(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unsupported Content-Type", http.StatusUnsupportedMediaType)
 		return
 	}
-	// 解析表单数据
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("解析表单数据失败: %v", err), http.StatusBadRequest)
 		return
 	}
 	// 获取表单中的 uuid 参数
-	startStr := r.Form.Get("start")
-	endStr := r.Form.Get("end")
-	uuids, err := dbImage.GetInfoQuery(startStr, endStr)
+	account := r.Form.Get("account")
+	salt := r.Form.Get("salt")
+	sign := r.Form.Get("sign")
+	token, userName, err := service.Login(account, salt, sign)
 	if err != nil {
+		http.Error(w, fmt.Sprintf("登录失败: %v", err), http.StatusBadRequest)
 		return
+	}
+	response := LoginResponse{
+		Token:    token,
+		Username: userName,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, err = fmt.Fprintf(w, `{"uuids": %v}`, uuids)
+
+	// 将响应结构体编码为 JSON 并写入响应体
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		return
+		http.Error(w, "服务器错误", http.StatusInternalServerError)
 	}
 }

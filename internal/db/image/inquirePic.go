@@ -1,6 +1,7 @@
-package db
+package image
 
 import (
+	sql2 "ImageV2/internal/db/sql"
 	"database/sql"
 	"fmt"
 )
@@ -14,7 +15,7 @@ type PicInfo struct {
 
 func GetInfoByUUID(uuidInquire string) (PicInfo, error) {
 	imageInfo := PicInfo{}
-	dbInfo, err := GetDB()
+	dbInfo, err := sql2.GetDB()
 	if err != nil {
 		return imageInfo, fmt.Errorf("获取数据库连接失败: %v", err)
 	}

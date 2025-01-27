@@ -1,4 +1,4 @@
-package db
+package sql
 
 import (
 	conf "ImageV2/configs"
@@ -8,15 +8,15 @@ import (
 	"sync"
 )
 
-var (
-	instance *DB
-	mu       sync.Mutex
-)
-
 type DB struct {
 	Dsn     string
 	Connect *sql.DB
 }
+
+var (
+	instance *DB
+	mu       sync.Mutex
+)
 
 // GetDB 获取数据库连接
 func GetDB() (*DB, error) {
@@ -33,6 +33,10 @@ func GetDB() (*DB, error) {
 				return nil, err
 			}
 			err = createDelTables(db)
+			if err != nil {
+				return nil, err
+			}
+			err = createUserTable(db)
 			if err != nil {
 				return nil, err
 			}
@@ -100,6 +104,7 @@ func DisconnectDB(db *sql.DB) error {
 	return nil
 }
 
+// createTables 创建图片信息表
 func createTables(db *sql.DB) error {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS image_info (
     	uuid VARCHAR(36) PRIMARY KEY,
@@ -114,11 +119,28 @@ func createTables(db *sql.DB) error {
 	return nil
 }
 
+// createDelTables 创建删除的图片信息表
 func createDelTables(db *sql.DB) error {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS image_info_del (
     	uuid VARCHAR(36) PRIMARY KEY,
 		image_name VARCHAR(255),
 		sha256Hash CHAR(64),
+		created_at DATETIME
+	)`
+	_, err := db.Exec(createTableSQL)
+	if err != nil {
+		return fmt.Errorf("创建表失败: %v", err)
+	}
+	return nil
+}
+
+// createUserTable 创建用户信息表
+func createUserTable(db *sql.DB) error {
+	createTableSQL := `CREATE TABLE IF NOT EXISTS user_info (
+    	uuid VARCHAR(36) PRIMARY KEY,
+		user_name VARCHAR(255),
+    	account VARCHAR(255),
+		password CHAR(64),
 		created_at DATETIME
 	)`
 	_, err := db.Exec(createTableSQL)

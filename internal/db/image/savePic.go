@@ -1,6 +1,7 @@
-package db
+package image
 
 import (
+	"ImageV2/internal/db/sql"
 	"ImageV2/internal/services"
 	"fmt"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 func SaveInfoToSQL(imageName, sha256Hash string, createdAt time.Time) error {
 	// 获取数据库连接
-	dbInfo, err := GetDB()
+	dbInfo, err := sql.GetDB()
 	if err != nil {
 		return fmt.Errorf("获取数据库连接失败: %v", err)
 	}
