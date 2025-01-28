@@ -5,7 +5,9 @@ go 1.23.2
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.8.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/satori/go.uuid v1.2.0
+	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781
 )
 
 require (

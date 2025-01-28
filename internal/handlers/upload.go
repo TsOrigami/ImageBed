@@ -15,6 +15,11 @@ import (
 )
 
 func HandleUpload(w http.ResponseWriter, r *http.Request) {
+	var (
+		err      error
+		username string
+		token    string
+	)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -26,22 +31,19 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查登录状态
-	err := service.CheckLogin(r)
-	if err != nil {
+	if err = service.CheckLogin(r); err != nil {
 		http.Error(w, fmt.Sprintf("未授权: %v", err), http.StatusUnauthorized)
 		return
 	}
-	token := r.Header.Get("Authorization")
+	token = r.Header.Get("Authorization")
 	if strings.HasPrefix(token, "Bearer ") {
 		token = strings.TrimPrefix(token, "Bearer ")
 	}
-	username, err := dbUser.GetUsername(token)
-	if err != nil {
+	if username, err = dbUser.GetUsername(token); err != nil {
 		errorHandle.DatabaseError(w, err)
 		return
 	}
-	err = r.ParseMultipartForm(100 << 20)
-	if err != nil {
+	if err = r.ParseMultipartForm(100 << 20); err != nil {
 		errorHandle.UploadError(w)
 		return
 	} // 限制上传文件大小为100MB
