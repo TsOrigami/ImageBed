@@ -1,4 +1,4 @@
-package handlers
+package operate
 
 import (
 	dbImage "ImageV2/internal/db/image"

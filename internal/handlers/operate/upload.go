@@ -1,9 +1,10 @@
-package handlers
+package operate
 
 import (
 	dbImage "ImageV2/internal/db/image"
 	dbUser "ImageV2/internal/db/user"
 	errorHandle "ImageV2/internal/error"
+	"ImageV2/internal/handlers"
 	service "ImageV2/internal/services"
 	"encoding/json"
 	"fmt"
@@ -101,7 +102,7 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 		}(k)
 	}
 	wg.Wait() // 等待所有文件上传任务完成
-	response := ImageResponse{
+	response := handlers.ImageResponse{
 		Code: 200,
 		Msg:  "文件上传成功",
 	}
