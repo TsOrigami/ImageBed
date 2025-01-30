@@ -10,6 +10,6 @@ func SetUserToken(userID string, token string) error {
 	if err != nil {
 		return err
 	}
-	redisClient.Connect.Set(redisClient.Ctx, token, userID, 5*time.Minute)
+	redisClient.Connect.Set(redisClient.Ctx, token, userID, time.Duration(redisClient.Remains)*time.Minute)
 	return nil
 }

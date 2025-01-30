@@ -2,10 +2,8 @@ package operate
 
 import (
 	dbImage "ImageV2/internal/db/image"
-	dbUser "ImageV2/internal/db/user"
 	"ImageV2/internal/handlers"
 	"net/http"
-	"strings"
 )
 
 type QueryResponse struct {
@@ -17,18 +15,13 @@ type QueryResponse struct {
 func QueryOperate(dataOperate map[string][]string) (*QueryResponse, error) {
 	var (
 		err      error
-		token    string
 		username string
 		uuids    []string
 		startStr string
 		endStr   string
 		response QueryResponse
 	)
-	token = dataOperate["Authorization"][0]
-	if strings.HasPrefix(token, "Bearer ") {
-		token = strings.TrimPrefix(token, "Bearer ")
-	}
-	username, err = dbUser.GetUsername(token)
+	username = dataOperate["username"][0]
 	startStr = dataOperate["start"][0]
 	endStr = dataOperate["end"][0]
 	uuids, err = dbImage.GetInfoQuery(startStr, endStr, username)

@@ -2,16 +2,16 @@ package services
 
 import (
 	conf "ImageV2/configs"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"os"
 	"sync"
 )
 
 // SaveImage 保存图片
-func SaveImage(imagePath string, fileName string, file multipart.File) error {
+func SaveImage(imagePath string, fileName string, file []byte) error {
 	localFileName := imagePath + "/" + fileName
 	out, err := os.Create(localFileName)
 	if err != nil {
@@ -23,7 +23,8 @@ func SaveImage(imagePath string, fileName string, file multipart.File) error {
 			return
 		}
 	}(out)
-	_, err = io.Copy(out, file)
+	reader := bytes.NewReader(file)
+	_, err = io.Copy(out, reader)
 	if err != nil {
 		return err
 	}

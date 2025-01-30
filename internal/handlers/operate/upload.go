@@ -2,114 +2,77 @@ package operate
 
 import (
 	dbImage "ImageV2/internal/db/image"
-	dbUser "ImageV2/internal/db/user"
-	errorHandle "ImageV2/internal/error"
 	"ImageV2/internal/handlers"
 	service "ImageV2/internal/services"
-	"encoding/json"
-	"fmt"
-	"mime/multipart"
+	"encoding/base64"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
 
-func HandleUpload(w http.ResponseWriter, r *http.Request) {
-	var (
-		err      error
-		username string
-		token    string
-	)
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	fmt.Printf("Content-Type: %s\n", r.Header.Get("Content-Type"))
-	// 检查 Content-Type 是否以 "multipart/form-data" 开头
-	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
-		http.Error(w, "Unsupported Content-Type, must be multipart/form-data", http.StatusUnsupportedMediaType)
-		return
-	}
-	// 检查登录状态
-	if err = service.CheckLogin(r); err != nil {
-		http.Error(w, fmt.Sprintf("未授权: %v", err), http.StatusUnauthorized)
-		return
-	}
-	token = r.Header.Get("Authorization")
-	if strings.HasPrefix(token, "Bearer ") {
-		token = strings.TrimPrefix(token, "Bearer ")
-	}
-	if username, err = dbUser.GetUsername(token); err != nil {
-		errorHandle.DatabaseError(w, err)
-		return
-	}
-	if err = r.ParseMultipartForm(100 << 20); err != nil {
-		errorHandle.UploadError(w)
-		return
-	} // 限制上传文件大小为100MB
-	mForm := r.MultipartForm
-	var wg sync.WaitGroup
+type UploadResponse struct {
+	ResData     *handlers.ImageResponse `json:"ResData"`
+	ContentType string                  `json:"Content-Type"`
+	Header      int                     `json:"Header"`
+}
 
-	// 逐个文件并发处理
-	for k := range mForm.File {
-		wg.Add(1) // 增加计数
-		go func(k string) {
-			defer wg.Done() // 完成时减少计数
-			file, fileHeader, err := r.FormFile(k)
-			if err != nil {
-				errorHandle.UploadError(w)
-				return
-			}
-			defer func(file multipart.File) {
-				err := file.Close()
-				if err != nil {
-					return
-				}
-			}(file)
-			fileName := fileHeader.Filename
-			imagePath, err := service.GetSavePath()
-			if err != nil {
-				errorHandle.UploadError(w)
-				return
-			}
-			err = service.SaveImage(imagePath, fileName, file)
-			if err != nil {
-				errorHandle.UploadError(w)
-				return
-			}
-			localFileName := imagePath + "/" + fileName
-			if err != nil {
-				errorHandle.UploadError(w)
+func UploadOperate(dataOperate map[string][]string) (*UploadResponse, error) {
+	var (
+		err       error
+		username  string
+		imagePath string
+	)
+	if imagePath, err = service.GetSavePath(); err != nil {
+		return nil, err
+	}
+	errChan := make(chan error, len(dataOperate))
+	username = dataOperate["username"][0]
+	var wg sync.WaitGroup
+	for key, values := range dataOperate {
+		wg.Add(1)
+		if key[:3] != "pic" {
+			wg.Done()
+			continue
+		}
+		go func(key string, values []string) {
+			defer wg.Done()
+			filename := key[4:]
+			fileBytes, err := base64.StdEncoding.DecodeString(values[0])
+			localFileName := imagePath + "/" + filename
+			if err = service.SaveImage(imagePath, filename, fileBytes); err != nil {
+				errChan <- err
 				return
 			}
 			channel := make(chan string, 1)
 			go func() {
 				picSha256, err := service.GetSha256(localFileName)
 				if err != nil {
-					errorHandle.UploadError(w)
+					errChan <- err
 					return
 				}
 				channel <- picSha256
 			}()
 			picSha256 := <-channel
 			uploadTime := time.Now()
-			err = dbImage.SaveInfoToSQL(fileName, username, picSha256, uploadTime)
-			if err != nil {
-				errorHandle.DatabaseError(w, err)
+			if err = dbImage.SaveInfoToSQL(filename, username, picSha256, uploadTime); err != nil {
 				return
 			}
-		}(k)
+		}(key, values)
 	}
-	wg.Wait() // 等待所有文件上传任务完成
-	response := handlers.ImageResponse{
-		Code: 200,
-		Msg:  "文件上传成功",
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+	if err = <-errChan; err != nil {
+		return nil, err
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, "服务器错误", http.StatusInternalServerError)
+	var response = UploadResponse{
+		ResData: &handlers.ImageResponse{
+			Code: 200,
+			Msg:  "文件上传成功",
+		},
+		ContentType: "application/json",
+		Header:      http.StatusOK,
 	}
+	return &response, nil
 }

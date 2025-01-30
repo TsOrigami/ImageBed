@@ -3,6 +3,7 @@ package websocket
 import (
 	"errors"
 	"github.com/gorilla/websocket"
+	"net/http"
 	"sync"
 )
 
@@ -14,6 +15,11 @@ type WsConn struct {
 	isClose   bool // 通道closeChan是否已经关闭
 	mutex     sync.Mutex
 	conn      *websocket.Conn
+}
+
+// HandelWebSocket 注册WebSocket路由
+func HandelWebSocket() {
+	http.HandleFunc("/ws", WebSocketBase)
 }
 
 // InitWebSocket TODO:初始化Websocket
