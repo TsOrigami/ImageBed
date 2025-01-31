@@ -3,6 +3,7 @@ package operate
 import (
 	"ImageV2/internal/handlers"
 	service "ImageV2/internal/services"
+	"fmt"
 	"net/http"
 )
 
@@ -23,6 +24,7 @@ func LoginOperate(dataOperate map[string][]string) (*LoginResponse, error) {
 		response LoginResponse
 	)
 	// 获取表单中的 uuid 参数
+	fmt.Printf("dataOperate: %v\n", dataOperate)
 	account = dataOperate["account"][0]
 	salt = dataOperate["salt"][0]
 	sign = dataOperate["sign"][0]
