@@ -5,14 +5,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/disintegration/imaging"
 	"io"
 	"os"
 	"sync"
 )
 
 // SaveImage 保存图片
-func SaveImage(imagePath string, fileName string, file []byte) error {
+func SaveImage(imagePath string, ThumbnailPath string, fileName string, file []byte) error {
 	localFileName := imagePath + "/" + fileName
+	thumbnailFileName := ThumbnailPath + "/" + fileName
 	out, err := os.Create(localFileName)
 	if err != nil {
 		return err
@@ -28,15 +30,26 @@ func SaveImage(imagePath string, fileName string, file []byte) error {
 	if err != nil {
 		return err
 	}
+	//生成缩略图
+	img, err := imaging.Decode(bytes.NewReader(file))
+	if err != nil {
+		return err
+	}
+	thumbnail := imaging.Resize(img, 0, 240, imaging.Lanczos)
+	err = imaging.Save(thumbnail, thumbnailFileName)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 var (
-	ImagePath = ""
-	mu        sync.Mutex
+	ImagePath     = ""
+	ThumbnailPath = ""
+	mu            sync.Mutex
 )
 
-func GetSavePath() (string, error) {
+func GetSavePath() (string, string, error) {
 	if ImagePath == "" {
 		mu.Lock()
 		defer mu.Unlock()
@@ -45,15 +58,16 @@ func GetSavePath() (string, error) {
 			var jsonData []byte
 			jsonData, err = conf.GetConfigGroupAsJSON("server")
 			if err != nil {
-				return "", fmt.Errorf("获取配置信息失败: %v", err)
+				return "", "", fmt.Errorf("获取配置信息失败: %v", err)
 			}
 			var config map[string]string
 			err = json.Unmarshal(jsonData, &config)
 			if err != nil {
-				return "", fmt.Errorf("解析配置信息失败: %v", err)
+				return "", "", fmt.Errorf("解析配置信息失败: %v", err)
 			}
 			ImagePath = config["imagesPath"]
+			ThumbnailPath = config["thumbnailPath"]
 		}
 	}
-	return ImagePath, nil
+	return ImagePath, ThumbnailPath, nil
 }

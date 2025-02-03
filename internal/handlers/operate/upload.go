@@ -18,11 +18,12 @@ type UploadResponse struct {
 
 func UploadOperate(dataOperate map[string][]string) (*UploadResponse, error) {
 	var (
-		err       error
-		username  string
-		imagePath string
+		err           error
+		username      string
+		imagePath     string
+		thumbnailPath string
 	)
-	if imagePath, err = service.GetSavePath(); err != nil {
+	if imagePath, thumbnailPath, err = service.GetSavePath(); err != nil {
 		return nil, err
 	}
 	errChan := make(chan error, len(dataOperate))
@@ -39,7 +40,7 @@ func UploadOperate(dataOperate map[string][]string) (*UploadResponse, error) {
 			filename := key[4:]
 			fileBytes, err := base64.StdEncoding.DecodeString(values[0])
 			localFileName := imagePath + "/" + filename
-			if err = service.SaveImage(imagePath, filename, fileBytes); err != nil {
+			if err = service.SaveImage(imagePath, thumbnailPath, filename, fileBytes); err != nil {
 				errChan <- err
 				return
 			}

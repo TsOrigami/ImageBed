@@ -18,8 +18,8 @@ var (
 	}
 )
 
-// WebSocketBase TODO:服务基本函数
-func WebSocketBase(w http.ResponseWriter, r *http.Request) {
+// WsServerBase 服务基本函数
+func WsServerBase(w http.ResponseWriter, r *http.Request) {
 	var (
 		err         error
 		conn        *websocket.Conn

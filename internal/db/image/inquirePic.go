@@ -9,6 +9,7 @@ import (
 type PicInfo struct {
 	UUID       string
 	ImageName  string
+	Username   string
 	Sha256Hash string
 	CreatedAt  string
 }
@@ -29,20 +30,11 @@ func GetInfoByUUID(uuidInquire string) (PicInfo, error) {
 			return
 		}
 	}(rows)
-	var isDelect = true
 	for rows.Next() {
-		err := rows.Scan(&imageInfo.UUID, &imageInfo.ImageName, &imageInfo.Sha256Hash, &imageInfo.CreatedAt, &isDelect)
+		err := rows.Scan(&imageInfo.UUID, &imageInfo.ImageName, &imageInfo.Username, &imageInfo.Sha256Hash, &imageInfo.CreatedAt)
 		if err != nil {
 			return imageInfo, fmt.Errorf("获取数据失败: %v", err)
 		}
-		if !isDelect {
-			break
-		}
 	}
-	if isDelect {
-		return imageInfo, fmt.Errorf("未查询到数据")
-	} else {
-		return imageInfo, nil
-	}
-
+	return imageInfo, nil
 }

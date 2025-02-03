@@ -8,8 +8,8 @@ import (
 	"regexp"
 )
 
-func HandleInvoke(w http.ResponseWriter, r *http.Request) {
-	re := regexp.MustCompile(`/invoke/([a-fA-F0-9-]+)`)
+func HandleThumbnail(w http.ResponseWriter, r *http.Request) {
+	re := regexp.MustCompile(`/thumbnail/([a-fA-F0-9-]+)`)
 	matches := re.FindStringSubmatch(r.URL.Path)
 	if len(matches) > 1 {
 		picInfo, err := dbImage.GetInfoByUUID(matches[1])
@@ -17,15 +17,15 @@ func HandleInvoke(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("获取数据失败: %v", err), http.StatusInternalServerError)
 			return
 		}
-		var ImagePath string
-		ImagePath, _, err = services.GetSavePath()
+		var ThumbnailPath string
+		_, ThumbnailPath, err = services.GetSavePath()
 		if err != nil {
 			http.Error(w, fmt.Sprintf("获取图片路径失败: %v", err), http.StatusInternalServerError)
 			return
 		}
-		ImagePath = ImagePath + "/" + picInfo.ImageName
+		ThumbnailPath = ThumbnailPath + "/" + picInfo.ImageName
 		w.Header().Set("Content-Type", "image/jpeg")
-		http.ServeFile(w, r, ImagePath)
+		http.ServeFile(w, r, ThumbnailPath)
 		return
 	} else {
 		http.Error(w, "invalid request", http.StatusBadRequest)

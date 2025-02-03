@@ -37,3 +37,5 @@
 字段：
 
 ​	imagesPath：图片保存的路径
+
+​	thumbnailPath：缩略图保存的路径

@@ -23,7 +23,7 @@ type WsConn struct {
 
 // HandelWebSocket 注册WebSocket路由
 func HandelWebSocket() {
-	http.HandleFunc("/ws", WebSocketBase)
+	http.HandleFunc("/ws", WsServerBase)
 }
 
 // InitWebSocket TODO:初始化Websocket
