@@ -4,6 +4,7 @@ import (
 	usr "ImageV2/internal/db/user"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 )
 
 func Login(account string, salt string, sign string) (string, string, error) {
@@ -22,5 +23,5 @@ func Login(account string, salt string, sign string) (string, string, error) {
 		}
 		return token, userName, nil
 	}
-	return "", "", nil
+	return "", "", errors.New("登录失败")
 }

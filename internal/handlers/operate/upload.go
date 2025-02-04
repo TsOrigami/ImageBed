@@ -22,6 +22,7 @@ func UploadOperate(dataOperate map[string][]string) (*UploadResponse, error) {
 		username      string
 		imagePath     string
 		thumbnailPath string
+		uuids         []string
 	)
 	if imagePath, thumbnailPath, err = service.GetSavePath(); err != nil {
 		return nil, err
@@ -53,11 +54,13 @@ func UploadOperate(dataOperate map[string][]string) (*UploadResponse, error) {
 				}
 				channel <- picSha256
 			}()
+			var uuid string
 			picSha256 := <-channel
 			uploadTime := time.Now()
-			if err = dbImage.SaveInfoToSQL(filename, username, picSha256, uploadTime); err != nil {
+			if uuid, err = dbImage.SaveInfoToSQL(filename, username, picSha256, uploadTime); err != nil {
 				return
 			}
+			uuids = append(uuids, uuid)
 		}(key, values)
 	}
 	go func() {
@@ -69,8 +72,9 @@ func UploadOperate(dataOperate map[string][]string) (*UploadResponse, error) {
 	}
 	var response = UploadResponse{
 		ResData: &handlers.ImageResponse{
-			Code: 200,
-			Msg:  "文件上传成功",
+			Code:  200,
+			Msg:   "文件上传成功",
+			UUIDs: uuids,
 		},
 		ContentType: "application/json",
 		Header:      http.StatusOK,

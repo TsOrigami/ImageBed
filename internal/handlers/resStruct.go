@@ -1,8 +1,9 @@
 package handlers
 
 type ImageResponse struct {
-	Code int    `json:"code"`
-	Msg  string `json:"msg"`
+	Code  int      `json:"code"`
+	Msg   string   `json:"msg"`
+	UUIDs []string `json:"uuid"`
 }
 
 type ImageQueryResponse struct {

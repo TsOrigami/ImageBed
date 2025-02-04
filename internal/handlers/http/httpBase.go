@@ -9,19 +9,51 @@ import (
 	"strings"
 )
 
-func HandleHttp() {
-	http.HandleFunc("/upload", HandleUpload)                // 上传图片
-	http.HandleFunc("/invoke/", operate.HandleInvoke)       // 调用图片
-	http.HandleFunc("/delete", HandleDelete)                // 删除图片
-	http.HandleFunc("/query", HandleQuery)                  // 查询原图
-	http.HandleFunc("/thumbnail/", operate.HandleThumbnail) // 查询缩略图
-	http.HandleFunc("/login", HandleLogin)                  // 登录
+// 修改后的CORS中间件
+func enableCors(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 设置CORS头
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "*") // 允许所有header
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Max-Age", "86400") // 缓存预检请求结果24小时
+
+		// 处理预检请求
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next(w, r)
+	}
+}
+
+func HandleHttp() *http.ServeMux {
+	// 为每个路由添加CORS中间件
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/upload", enableCors(HandleUpload))
+	mux.HandleFunc("/invoke/", enableCors(operate.HandleInvoke))
+	mux.HandleFunc("/delete", enableCors(HandleDelete))
+	mux.HandleFunc("/query", enableCors(HandleQuery))
+	mux.HandleFunc("/thumbnail/", enableCors(operate.HandleThumbnail))
+	mux.HandleFunc("/login", enableCors(HandleLogin))
+
+	return mux
 }
 
 func HandleUpload(w http.ResponseWriter, r *http.Request) {
-	var (
-		err error
-	)
+	var err error
+
+	// 特别处理上传请求的CORS
+	if r.Method == "OPTIONS" {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	dataOperate := make(map[string][]string)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

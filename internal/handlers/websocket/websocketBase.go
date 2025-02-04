@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -22,8 +23,11 @@ type WsConn struct {
 }
 
 // HandelWebSocket 注册WebSocket路由
-func HandelWebSocket() {
-	http.HandleFunc("/ws", WsServerBase)
+func HandelWebSocket(mux *http.ServeMux) {
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("收到 WebSocket 请求: %s", r.URL.String())
+		WsServerBase(w, r)
+	})
 }
 
 // InitWebSocket TODO:初始化Websocket
