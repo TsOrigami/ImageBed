@@ -64,12 +64,6 @@ func getOperateData(r *http.Request) (map[string][]string, error) {
 		username string
 	)
 	dataOperate := make(map[string][]string)
-	if r.Method != http.MethodPost {
-		return nil, fmt.Errorf("method Not Allowed")
-	}
-	if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
-		return nil, fmt.Errorf("unsupported Content-Type")
-	}
 	if err = r.ParseForm(); err != nil {
 		return nil, fmt.Errorf("解析表单数据失败: %v", err)
 	}

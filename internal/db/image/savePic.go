@@ -21,6 +21,11 @@ func SaveInfoToSQL(imageName string, username string, sha256Hash string, created
 		fmt.Println(sha256Hash)
 		return "", fmt.Errorf("插入数据失败: %v", err)
 	}
+	updateSQL := `UPDATE user_info SET count = count + 1 WHERE account = ?`
+	_, err = dbInfo.Connect.Exec(updateSQL, username)
+	if err != nil {
+		return "", fmt.Errorf("更新用户图片数量失败: %v", err)
+	}
 	fmt.Printf("成功插入图片信息: image_name=%s, user_name=%s, sha256_hash=%s, created_at=%s\n", imageName, username, sha256Hash, createdAt)
 	return uuidV1, nil
 }

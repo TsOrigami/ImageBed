@@ -143,6 +143,7 @@ func createUserTable(db *sql.DB) error {
 		user_name VARCHAR(255),
     	account VARCHAR(255),
 		password CHAR(64),
+    	count INT,
 		created_at DATETIME
 	)`
 	_, err := db.Exec(createTableSQL)

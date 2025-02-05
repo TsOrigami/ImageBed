@@ -25,9 +25,24 @@ func LoginOperate(dataOperate map[string][]string) (*LoginResponse, error) {
 	)
 	// 获取表单中的 uuid 参数
 	fmt.Printf("dataOperate: %v\n", dataOperate)
-	account = dataOperate["account"][0]
-	salt = dataOperate["salt"][0]
-	sign = dataOperate["sign"][0]
+	if dataOperate["account"] != nil && dataOperate["account"][0] != "" {
+		account = dataOperate["account"][0]
+	} else {
+		err = fmt.Errorf("account is empty")
+	}
+	if dataOperate["salt"] != nil && dataOperate["salt"][0] != "" {
+		salt = dataOperate["salt"][0]
+	} else {
+		err = fmt.Errorf("salt is empty")
+	}
+	if dataOperate["sign"] != nil || dataOperate["sign"][0] != "" {
+		sign = dataOperate["sign"][0]
+	} else {
+		err = fmt.Errorf("sign is empty")
+	}
+	if err != nil {
+		return nil, err
+	}
 	if token, userName, err = service.Login(account, salt, sign); err != nil {
 		return nil, err
 	}

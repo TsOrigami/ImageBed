@@ -142,6 +142,8 @@ func (conn *WsConn) writeMsgLoop() {
 			data, err = json.Marshal(resData.ResDataDelete)
 		case "query":
 			data, err = json.Marshal(resData.ResDataQuery)
+		case "amount":
+			data, err = json.Marshal(resData.ResDataAmount)
 		default:
 			err = errors.New("method not found")
 		}
@@ -158,6 +160,7 @@ type WsResponse struct {
 	ResDataUpload *Opt.UploadResponse `json:"ResData_upload"`
 	ResDataDelete *Opt.DeleteResponse `json:"ResData_delete"`
 	ResDataQuery  *Opt.QueryResponse  `json:"ResData_query"`
+	ResDataAmount *Opt.AmountResponse `json:"ResData_amount"`
 	method        string
 }
 
@@ -183,6 +186,7 @@ func operateData(data []byte, conn *WsConn) (*WsResponse, error) {
 	UploadRes := &Opt.UploadResponse{}
 	DeleteRes := &Opt.DeleteResponse{}
 	QueryRes := &Opt.QueryResponse{}
+	AmountRes := &Opt.AmountResponse{}
 	switch method {
 	case "upload":
 		UploadRes, err = Opt.UploadOperate(dataOperate)
@@ -190,6 +194,8 @@ func operateData(data []byte, conn *WsConn) (*WsResponse, error) {
 		DeleteRes, err = Opt.DeleteOperate(dataOperate)
 	case "query":
 		QueryRes, err = Opt.QueryOperate(dataOperate)
+	case "amount":
+		AmountRes, err = Opt.AmountOperate(dataOperate)
 	default:
 		err = errors.New("method not found")
 	}
@@ -197,6 +203,7 @@ func operateData(data []byte, conn *WsConn) (*WsResponse, error) {
 		ResDataUpload: UploadRes,
 		ResDataDelete: DeleteRes,
 		ResDataQuery:  QueryRes,
+		ResDataAmount: AmountRes,
 		method:        method,
 	}
 	return response, err

@@ -40,7 +40,11 @@ func DeleteInfoFromSQL(uuidDel string, usernameDel string) error {
 	if err != nil {
 		return fmt.Errorf("删除数据失败: %v", err)
 	}
-
+	updateSQL := `UPDATE user_info SET count = count - 1 WHERE account = ?`
+	_, err = dbInfo.Connect.Exec(updateSQL, usernameDel)
+	if err != nil {
+		return fmt.Errorf("更新用户图片数量失败: %v", err)
+	}
 	fmt.Printf("成功删除图片信息，UUID: %s\n", uuidDel)
 	return nil
 }
