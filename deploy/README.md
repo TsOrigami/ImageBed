@@ -8,29 +8,23 @@
 
 ## 快速部署
 
-### 1. 解压部署包
-```bash
-tar -xzf imagev2-deploy.tar.gz
-cd deploy
-```
-
-### 2. 导入镜像
+### 1. 导入镜像(在release页面下载)
 ```bash
 docker load -i images.tar
 ```
 
-### 3. 配置文件
+### 2. 配置文件
 检查并按需修改 `config.conf` 文件：
 - MySQL 配置（默认无需修改）
 - Redis 配置（默认无需修改）
 - 服务器配置（根据实际部署环境修改 prefix）
 
-### 4. 启动服务
+### 3. 启动服务
 ```bash
 docker-compose up -d
 ```
 
-### 5. 验证服务
+### 4. 验证服务
 访问 http://localhost:8000 确认服务是否正常运行
 
 ## 目录结构
