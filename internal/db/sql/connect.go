@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type DB struct {
@@ -82,14 +83,18 @@ func ConnectionDB() (*sql.DB, string, error) {
 	password := config["password"]
 	dbname := config["dbname"]
 	mysqlDSN := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + dbname
-	db, err = sql.Open("mysql", mysqlDSN)
-	if err != nil {
-		return nil, "", fmt.Errorf("连接数据库失败: %v", err)
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		db, err = sql.Open("mysql", mysqlDSN)
+		if err == nil {
+			err = db.Ping()
+			if err == nil {
+				return db, mysqlDSN, nil
+			}
+		}
+		time.Sleep(time.Second * 5)
 	}
-	if db == nil {
-		return nil, "", fmt.Errorf("数据库连接未初始化成功")
-	}
-	return db, mysqlDSN, nil
+	return nil, "", fmt.Errorf("连接数据库失败after %d attempts: %v", maxRetries, err)
 }
 
 // DisconnectDB 断开数据库连接

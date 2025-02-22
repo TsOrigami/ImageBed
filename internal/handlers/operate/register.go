@@ -1,46 +1,53 @@
 package operate
 
 import (
-	conf "ImageV2/configs"
 	"ImageV2/internal/handlers"
-	"encoding/json"
+	service "ImageV2/internal/services"
+	"fmt"
 	"net/http"
 )
 
-type registerResponse struct {
+type RegisterResponse struct {
 	ResData     *handlers.SystemRegister `json:"ResData"`
 	ContentType string                   `json:"Content-Type"`
 	Header      int                      `json:"Header"`
 }
 
-func HandleRegister(w http.ResponseWriter, r *http.Request) {
+func HandleRegister(dataOperate map[string][]string) (*RegisterResponse, error) {
 	var (
 		err      error
-		response registerResponse
-		jsonData []byte
+		account  string
+		username string
+		password string
 	)
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
+	if dataOperate["account"] != nil && dataOperate["account"][0] != "" {
+		account = dataOperate["account"][0]
+	} else {
+		err = fmt.Errorf("account is empty")
 	}
-	jsonData, err = conf.GetConfigGroupAsJSON("server")
+	if dataOperate["user"] != nil && dataOperate["user"][0] != "" {
+		username = dataOperate["user"][0]
+	} else {
+		err = fmt.Errorf("username is empty")
+	}
+	if dataOperate["password"] != nil && dataOperate["password"][0] != "" {
+		password = dataOperate["password"][0]
+	} else {
+		err = fmt.Errorf("password is empty")
+	}
 	if err != nil {
-		return
+		return nil, err
 	}
-	var systemConfig = make(map[string]string)
-	err = json.Unmarshal(jsonData, &systemConfig)
-	prefixPath := systemConfig["prefix"]
-	response.ResData = &handlers.SystemRegister{
-		Register: prefixPath,
-	}
-	response.ContentType = "application/json"
-	response.Header = http.StatusOK
-	w.Header().Set("Content-Type", response.ContentType)
-	w.WriteHeader(response.Header)
-	err = json.NewEncoder(w).Encode(response.ResData)
+	err = service.Registered(account, username, password)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		return nil, err
 	}
-	return
+	response := RegisterResponse{
+		ResData: &handlers.SystemRegister{
+			Register: "success",
+		},
+		ContentType: "application/json",
+		Header:      http.StatusOK,
+	}
+	return &response, nil
 }

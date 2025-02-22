@@ -3,6 +3,7 @@ package main
 import (
 	HTTP "ImageV2/internal/handlers/http"
 	WS "ImageV2/internal/handlers/websocket"
+	service "ImageV2/internal/services"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
@@ -22,6 +23,9 @@ func main() {
 	WS.HandelWebSocket(mux)
 	log.Println("WebSocket 路由注册完成")
 
+	// 注册游客账号
+	_ = service.Registered("visitors", "visitors", "123456")
+
 	// 启动服务器
 	addr := ":8000"
 	log.Printf("服务器正在启动，监听地址: %s", addr)
@@ -29,4 +33,5 @@ func main() {
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("服务器启动失败: %v", err)
 	}
+
 }

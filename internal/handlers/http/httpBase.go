@@ -43,7 +43,8 @@ func HandleHttp() *http.ServeMux {
 	mux.HandleFunc("/amount", enableCors(HandleAmount))
 	mux.HandleFunc("/thumbnail/", enableCors(operate.HandleThumbnail))
 	mux.HandleFunc("/login", enableCors(HandleLogin))
-	mux.HandleFunc("/register", enableCors(operate.HandleRegister))
+	mux.HandleFunc("/prefix", enableCors(operate.HandlePrefix))
+	mux.HandleFunc("/register", enableCors(HandleRegister))
 
 	return mux
 }
@@ -202,6 +203,34 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if resData, err = operate.LoginOperate(dataOperate); err != nil {
+		return
+	}
+	w.Header().Set("Content-Type", resData.ContentType)
+	w.WriteHeader(resData.Header)
+	if err = json.NewEncoder(w).Encode(resData.ResData); err != nil {
+		http.Error(w, "服务器错误", http.StatusInternalServerError)
+	}
+}
+
+func HandleRegister(w http.ResponseWriter, r *http.Request) {
+	var (
+		err         error
+		resData     *operate.RegisterResponse
+		dataOperate map[string][]string
+	)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if r.Header.Get("Content-Type") != "application/x-www-form-urlencoded" {
+		http.Error(w, "Unsupported Content-Type, must be application/x-www-form-urlencoded", http.StatusUnsupportedMediaType)
+		return
+	}
+	if dataOperate, err = getOperateData(r); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if resData, err = operate.HandleRegister(dataOperate); err != nil {
 		return
 	}
 	w.Header().Set("Content-Type", resData.ContentType)

@@ -40,6 +40,34 @@
 
 *token存在有效期。在/configs/config.conf中设置[redis]的remains字段
 
+### 注册 register
+
+接口：/register
+
+方法：POST
+
+参数：
+
+​		Body参数
+
+​		内容格式：application/x-www-form-urlencoded
+
+​			account:  string;
+
+​			user:  string;
+
+​			password:  string;
+
+返回响应：
+
+​		成功(200)：
+
+​			HTTP 状态码: 200
+
+​			内容格式:  JSONapplication/json
+
+​					Register: "success";
+
 ### 上传 upload
 
 接口：/upload
@@ -160,3 +188,100 @@
 
 ​	查询时获取的图片的uuid。
 
+### 调用 invoke
+
+接口：/invoke
+
+方法：get
+
+参数：
+
+​		query 参数:
+
+​			uuid: string
+
+返回响应：
+
+​		成功(200)：
+
+​			HTTP 状态码: 200
+
+​			内容:
+
+​				返回的图片
+
+*Body的”uuid“：
+
+​	查询时获取的图片的uuid。
+
+### 调用缩略图 thumbnail
+
+接口：/thumbnail
+
+方法：get
+
+参数：
+
+​		query 参数:
+
+​			uuid: string
+
+返回响应：
+
+​		成功(200)：
+
+​			HTTP 状态码: 200
+
+​			内容:
+
+​				返回的图片的缩略图
+
+*Body的”uuid“：
+
+​	查询时获取的图片的uuid。
+
+### 获取图片总数 amount
+
+接口：/amount
+
+方法：GET
+
+参数：
+
+​		Headers 参数
+
+​			Authorization: Bearer + {{token}};
+
+返回响应：
+
+​		成功(200)：
+
+​			HTTP 状态码: 200
+
+​			内容格式:  JSONapplication/json
+
+​					code: 200
+
+​					Count: int
+
+*Headers的token：
+
+​	为登录时返回的token
+
+### 获取通信地址 prefix
+
+接口：/prefix
+
+方法：GET
+
+返回响应：
+
+​		成功(200)：
+
+​			HTTP 状态码: 200
+
+​			内容格式:  JSONapplication/json
+
+​					Register: string
+
+*实际没什么用 因为获取通信地址的前提是你能访问通。但是你能访问通了说明你有通信地址了。。。
